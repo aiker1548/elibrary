@@ -38,9 +38,9 @@ def new_book():
     if request.method == 'POST':
         file = request.files['file']
         if file:
-            filename = secure_filename(file.filename)
+            filename = file.filename
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            file_path = os.path.join(UPLOAD_FOLDER, filename)
+            file_path = filename
         else:
             file_path = None
 
