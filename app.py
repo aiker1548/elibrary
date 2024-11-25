@@ -1,7 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Book, Author
+from werkzeug.utils import secure_filename 
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash
+import os  # Для работы с файловой системой
 
 app = Flask(__name__, static_folder='static')
 
@@ -12,6 +14,11 @@ Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
+UPLOAD_FOLDER = 'static/uploads'
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+    
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Главная страница
 @app.route('/')
@@ -25,11 +32,23 @@ def index():
     return render_template("index.html", context=context)
 
 
-# Добавление книги
+
 @app.route('/books/new/', methods=['GET', 'POST'])
 def new_book():
     if request.method == 'POST':
-        newbook = Book(title=request.form['name'], genre=request.form['genre'])
+        file = request.files['file']
+        if file:
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            file_path = os.path.join(UPLOAD_FOLDER, filename)
+        else:
+            file_path = None
+
+        newbook = Book(
+            title=request.form['name'],
+            genre=request.form['genre'],
+            file_path=file_path
+        )
         if request.form['author']:
             author = session.query(Author).filter_by(name=request.form['author']).first()
             if author:
@@ -44,6 +63,7 @@ def new_book():
         return render_template('newBook.html')
 
 
+
 # Редактирование книги
 @app.route("/books/<int:book_id>/edit/", methods=['GET', 'POST'])
 def edit_book(book_id):
@@ -51,24 +71,21 @@ def edit_book(book_id):
     if request.method == 'POST':
         if request.form['title']:
             edited_book.title = request.form['title']
-        if request.form['author']:
-            author = session.query(Author).filter_by(name=request.form['author']).first()
-            if author == request.form['author']:
-                pass
-            elif author:
-                edited_book.authors.clear()
-                edited_book.authors.append(author)
-            else:
-                edited_book.authors.clear()
-                author = Author(name=request.form['author'])
-                edited_book.authors.append(author)
         if request.form['genre']:
             edited_book.genre = request.form['genre']
-
+        if request.files['file']:
+            file = request.files['file']
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            edited_book.file_path = os.path.join(UPLOAD_FOLDER, filename)
         session.commit()
         return redirect(url_for('index'))
     else:
         return render_template('editBook.html', book=edited_book)
+
+@app.route('/download/<filename>', methods=['GET', 'POST'])
+def download_book(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
 
 
 # Удаление книги

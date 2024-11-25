@@ -25,9 +25,12 @@ class Book(Base):
         secondary=association_table,
         back_populates='books')
     genre = Column(String(250))
+    file_path = Column(String(250))
 
     def __repr__(self):
         return f'{self.title}'
+    
+
 
 
 class Author(Base):

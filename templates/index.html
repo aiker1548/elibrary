@@ -1,6 +1,6 @@
 {% extends 'layout/basic.html' %}
 {% block title %}
-    Бибилиотека
+    Библиотека
 {% endblock %}
 {% block content %}
     <div class="wrapper">
@@ -17,15 +17,17 @@
                                 <h3>Название: {{ book.title }}</h3>
                                 <h4>Автор: {{ book.authors|join(', ') }}</h4>
                                 <h4>Жанр: {{ book.genre }}</h4>
+                                {% if book.file_path %}
+                                    <a href="{{ url_for('download_book', filename=book.file_path) }}">Скачать книгу</a>
+                                {% endif %}
                             </div>
                             <div class="one-book-btns">
-                                <a href="{{ url_for('edit_book', book_id = book.id ) }}">
+                                <a href="{{ url_for('edit_book', book_id=book.id) }}">
                                     <button>&#9998;</button>
                                 </a>
-                                <a href="{{ url_for('delete_book', book_id = book.id ) }}" style="margin-left: 10px;">
+                                <a href="{{ url_for('delete_book', book_id=book.id) }}" style="margin-left: 10px;">
                                     <button>&#10006;</button>
                                 </a>
-
                             </div>
                         </div>
                     {% endfor %}
@@ -44,10 +46,10 @@
                                 <h3>Книги: {{ author.books|join(', ') }}</h3>
                             </div>
                             <div class="one-author-btns">
-                               <a href="{{ url_for('edit_author', author_id = author.id ) }}">
+                                <a href="{{ url_for('edit_author', author_id=author.id) }}">
                                     <button>&#9998;</button>
                                 </a>
-                                <a href="{{ url_for('delete_author', author_id = author.id ) }}" style="margin-left: 10px;">
+                                <a href="{{ url_for('delete_author', author_id=author.id) }}" style="margin-left: 10px;">
                                     <button>&#10006;</button>
                                 </a>
                             </div>
