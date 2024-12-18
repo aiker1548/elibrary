@@ -20,6 +20,71 @@ if not os.path.exists(UPLOAD_FOLDER):
     
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+global loged
+loged = False
+
+global admin
+admin = False
+
+
+
+
+# Данные пользователей в оперативной памяти
+users = {'admin': 'admin111'}  # Для проверки входа как админ
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+
+        if username in users:
+            return "Пользователь уже существует!", 400
+
+        users[username] = password
+        global loged
+        loged = True
+
+        return redirect(url_for('index'))
+
+    return render_template('register.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    global admin
+    global loged
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+
+        if username in users and users[username] == password:
+            loged = True
+            admin= username == 'admin' and password == 'admin111'
+            return redirect(url_for('index'))
+
+        return "Неверное имя пользователя или пароль!", 400
+
+    return render_template('login.html')
+
+    
+@app.route('/admin')
+def admin():
+    global loged
+    global admin
+    admin = True
+    loged = True
+    return redirect(url_for('index'))
+    
+
+@app.route('/logout')
+def logout():
+    global admin
+    admin = False
+    global loged
+    loged = False
+
+    return redirect(url_for('index'))
+
 # Главная страница
 @app.route('/')
 def index():
@@ -29,7 +94,9 @@ def index():
         "books": books,
         "authors": authors,
     }
-    return render_template("index.html", context=context)
+    return render_template("index.html", context=context, login=loged, admin=admin)
+
+
 
 
 
@@ -140,12 +207,14 @@ def delete_author(author_id):
 # Функция для фильтрации книг
 @app.route('/search/', methods=['GET', 'POST'])
 def search_book():
+    global loged
+    global admin
     if request.method == 'POST':
         if request.form['filter'] == 'book':
             books = session.query(Book).filter_by(title=request.form['title']).all()
         elif request.form['filter'] == 'author':
             books = session.query(Book).filter(Book.authors.any(Author.name.in_([request.form['title']]))).all()
-    return render_template('searchResult.html', books=books)
+    return render_template('searchResult.html', books=books, login=loged, admin=admin)
 
 
 if __name__ == '__main__':

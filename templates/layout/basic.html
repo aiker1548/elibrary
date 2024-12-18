@@ -4,9 +4,10 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <div class="header">
         <h1>Библиотека</h1>
+        {% if admin or login %}
         <div class="btns-wrapper">
             <form action="{{ url_for('search_book')}}" method="post">
-                <input type="search" name = 'title' placeholder="Поиск книги">
+                <input type="search" name="title" placeholder="Поиск книги">
                 <label>
                     <select name="filter">
                         <option value="author">По автору</option>
@@ -15,7 +16,19 @@
                 </label>
                 <input type="submit" value="Искать">
             </form>
+            <div class="btns-wrapper">
+                <a href="{{ url_for('logout') }}">
+                    <button type="button">Выйти</button>
+                </a>
+            </div>
         </div>
+        {% else %}
+        <div class="btns-wrapper">
+            <a href="{{ url_for('login') }}">
+                <button type="button">Авторизация</button>
+            </a>
+        </div>
+        {% endif %}
     </div>
 </head>
 <body>
